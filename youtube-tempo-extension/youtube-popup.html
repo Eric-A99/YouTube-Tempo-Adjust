@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Tempo Adjust</title>
+    <style>
+        body {
+            width: 280px;
+            padding: 20px;
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(145deg, #1a1a1a, #2d2d2d);
+            color: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .status {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .status.active {
+            border-color: #34a853;
+            background: rgba(52, 168, 83, 0.1);
+        }
+
+        .status.inactive {
+            border-color: #ea4335;
+            background: rgba(234, 67, 53, 0.1);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active {
+            background: #34a853;
+        }
+
+        .status-dot.inactive {
+            background: #ea4335;
+        }
+
+        .speed-display {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .speed-value {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+            background-size: 300% 300%;
+            animation: gradientShift 3s ease infinite;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .speed-percentage {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 500;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .fader-container {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .fader-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 16px;
+            text-align: center;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .slider-container {
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .speed-slider {
+            width: 100%;
+            height: 12px;
+            background: linear-gradient(to right, #333 0%, #333 100%);
+            outline: none;
+            border-radius: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .slider-container::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 1px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #4ecdc4, #45b7d1);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(78, 205, 196, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .speed-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 16px rgba(78, 205, 196, 0.5);
+        }
+
+        .range-indicators {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 500;
+        }
+
+        .pitch-toggle {
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 12px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            margin-bottom: 15px;
+        }
+
+        .pitch-toggle:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .pitch-toggle.active {
+            background: #4ecdc4;
+            border-color: #4ecdc4;
+        }
+
+        .reset-button {
+            background: rgba(78, 205, 196, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #4ecdc4;
+            line-height: 1.4;
+            border: 1px solid rgba(78, 205, 196, 0.2);
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        .reset-button:hover {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: rgba(78, 205, 196, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .reset-button:active {
+            transform: translateY(0);
+            background: rgba(78, 205, 196, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🎵 YouTube Tempo Fader</h1>
+        <p>Smooth speed control</p>
+    </div>
+
+    <div class="status" id="statusContainer">
+        <div class="status-indicator">
+            <div class="status-dot" id="statusDot"></div>
+            <strong id="statusText">Checking...</strong>
+        </div>
+        <div id="statusMessage"></div>
+    </div>
+
+    <div class="speed-display">
+        <div class="speed-value" id="speedValue">1.00×</div>
+        <div class="speed-percentage" id="speedPercentage">0%</div>
+    </div>
+
+    <div class="fader-container">
+        <div class="fader-label">🎚️ Speed Fader</div>
+        <div class="slider-container">
+            <input 
+                type="range" 
+                id="speedSlider" 
+                class="speed-slider"
+                min="-16" 
+                max="16" 
+                step="0.5" 
+                value="0"
+            >
+        </div>
+        <div class="range-indicators">
+            <div>-16%</div>
+            <div>-8%</div>
+            <div style="color: #4ecdc4; font-weight: 600;">0%</div>
+            <div>+8%</div>
+            <div>+16%</div>
+        </div>
+    </div>
+
+    <button class="pitch-toggle" id="pitchToggle">
+        🎵 Preserve Pitch: <strong>OFF</strong>
+    </button>
+
+    <button class="reset-button" id="resetButton">
+        🔄 <strong>Reset to 1.00×</strong> (Center Position)
+    </button>
+
+    <script src="youtube-popup.js"></script>
+</body>
+</html>
